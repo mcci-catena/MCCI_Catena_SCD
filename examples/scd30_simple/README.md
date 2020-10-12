@@ -50,7 +50,7 @@ T(F)=75.02  Humidity=38.90%  Dewpoint(F)=48.32  CO2 concentration=402.54 ppm
 T(F)=75.02  Humidity=38.89%  Dewpoint(F)=48.31  CO2 concentration=404.01 ppm
 ```
 
-The first reading after power up is 
+The first reading after power up is
 Here's an example of blowing gently on the sensor (with mouth wide for slow airflow):
 
 ```log
@@ -76,7 +76,7 @@ T(F)=75.05  Humidity=39.92%  Dewpoint(F)=49.04  CO2 concentration=1661.44 ppm
 T(F)=75.05  Humidity=39.88%  Dewpoint(F)=49.01  CO2 concentration=1595.87 ppm
 ```
 
-Note that the humidity goes up modestly, but the CO2 ppm goes way up. A person's breath is about 4000 ppm CO2, and is warmer and more humid than ambient. The CO2 takes a while to diffuse back to ambient levels. Some of this is sensor response time; 
+Note that the humidity goes up modestly, but the CO2 ppm goes way up. A person's breath is about 4000 ppm CO2, and is warmer and more humid than ambient. The CO2 takes a while to diffuse back to ambient levels. Some of this is sensor response time;
 
 If measuring continuously with this program, you may see self-heating in the sensor (i.e., the temperature may be higher than ambient).
 

@@ -85,7 +85,7 @@ void setup()
         /* turn on boost regulator */
         pinMode(D5, OUTPUT);
         digitalWrite(D5, 1);
-    
+
         /* power up sensor */
         pinMode(D11, OUTPUT);
         digitalWrite(D11, 1);

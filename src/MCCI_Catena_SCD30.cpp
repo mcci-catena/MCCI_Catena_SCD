@@ -68,7 +68,7 @@ bool cSCD30::readProductInfo()
 
     if (! this->readMeasurementInterval(info.MeasurementInterval))
         return false;
-    
+
     if (! this->readAutoSelfCalibration(info.fASC_status))
         return false;
 
@@ -80,7 +80,7 @@ bool cSCD30::readProductInfo()
 
     if (! this->readAltitudeCompensation(info.AltitudeCompensation))
         return false;
-    
+
     this->m_ProductInfo = info;
     return true;
     }
@@ -174,7 +174,7 @@ Definition:
 Description:
     The given command is issued to the sensor. If successful, the method
     delays 3 milliseconds, then reads 3 bytes, checking CRC. If further
-    successful, the method interprets the value read as a big-endian 
+    successful, the method interprets the value read as a big-endian
     16-bit value.
 
 Returns:
@@ -207,7 +207,7 @@ cSCD30::readUint16(
 
         result = this->readResponse(buf, sizeof(buf));
         }
-    
+
     if (result)
         {
         value = this->getUint16BE(buf);
@@ -266,7 +266,7 @@ bool cSCD30::writeCommand(cSCD30::Command command)
 
 bool cSCD30::writeCommand(cSCD30::Command command, std::uint16_t param)
     {
-    const std::uint8_t cbuf[4] = 
+    const std::uint8_t cbuf[4] =
         {
         std::uint8_t(std::uint16_t(command) >> 8), std::uint8_t(command),
         std::uint8_t(std::uint16_t(param) >> 8), std::uint8_t(param),
@@ -356,7 +356,7 @@ bool cSCD30::queryReady(bool &fError)
         fError = true;
         return this->setLastError(Error::NotMeasuring);
         }
-    
+
     if ((std::int32_t)(millis() - this->m_tReady) < 0)
         {
         fError = false;
@@ -481,7 +481,7 @@ bool cSCD30::crc_multi(const std::uint8_t *buf, size_t nbuf)
     {
     if (buf == nullptr)
         return this->setLastError(Error::InternalInvalidParameter);
-    
+
     for (; nbuf >= 3; buf += 3, nbuf -= 3)
         {
         if (this->crc(buf, 2) != buf[2])

@@ -147,9 +147,9 @@ public:
         };
 
 private:
-    // this is internal -- centralize it but require that clients call the 
+    // this is internal -- centralize it but require that clients call the
     // public method (which centralizes the strings and the search)
-    static constexpr const char *m_szErrorMessages = 
+    static constexpr const char *m_szErrorMessages =
         "Success\0"
         "NoWire\0"
         "CommandWriteFailed\0"
@@ -186,9 +186,9 @@ public:
     bool readMeasurement();
     bool activateAutomaticSelfCalbration(bool fEnableIfTrue);
     bool setForcedRecalibrationValue(std::uint16_t CO2ppm);
-    bool setTemperatureOffset(std::int16_t offset_centidegrees_C); 
+    bool setTemperatureOffset(std::int16_t offset_centidegrees_C);
     bool setAltitudeCompensation(std::int16_t meters);
-    bool softReset(); 
+    bool softReset();
     float getTemperature() const { return this->m_Measurement.Temperature; }
     float getCO2ppm() const { return this->m_Measurement.CO2ppm; }
     float getRelativeHumidity() const { return this->m_Measurement.CO2ppm; }
@@ -216,7 +216,7 @@ public:
     enum class State : std::uint8_t
         {
         Uninitialized,      /// this->begin() has never succeeded.
-        End,                /// this->begin() succeeded, followed by this->end() 
+        End,                /// this->begin() succeeded, followed by this->end()
         Initial,            /// initial after begin [indeterminate]
         Idle,               /// idle (not measuring)
         Triggered,          /// continuous measurement running, no data available.
@@ -242,7 +242,7 @@ protected:
     bool crc_multi(const std::uint8_t *buf, size_t nBuf);
     std::int8_t getAddress() const
         { return static_cast<std::int8_t>(this->m_address); }
-    bool checkRunning() 
+    bool checkRunning()
         {
         if (! this->isRunning())
             return this->setLastError(Error::Uninitialized);
