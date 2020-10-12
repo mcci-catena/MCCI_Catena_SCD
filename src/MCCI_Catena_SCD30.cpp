@@ -220,6 +220,43 @@ cSCD30::readUint16(
     return result;
     }
 
+bool cSCD30::setMeasurementInterval(std::uint16_t interval)
+    {
+    if (interval < 2)
+        return this->setLastError(Error::InvalidParameter);
+
+    bool result = this->checkRunning();
+    if (result)
+        {
+        result = this->writeCommand(Command::SetMeasurementInterval, interval);
+        }
+    if (result)
+        {
+        std::uint16_t nonce;
+        result = this->readMeasurementInterval(nonce);
+        if (result)
+            this->m_ProductInfo.MeasurementInterval = nonce;
+        }
+    return result;
+    }
+
+bool cSCD30::activateAutomaticSelfCalbration(bool fEnableIfTrue)
+    {
+    bool result = this->checkRunning();
+    if (result)
+        {
+        result = this->writeCommand(Command::EnableAutoSelfCal, fEnableIfTrue);
+        }
+    if (result)
+        {
+        std::uint16_t nonce;
+        result = this->readAutoSelfCalibration(nonce);
+        if (result)
+            this->m_ProductInfo.fASC_status = nonce;
+        }
+    return result;
+    }
+
 bool cSCD30::writeCommand(cSCD30::Command command)
     {
     const std::uint8_t cbuf[2] = { std::uint8_t(std::uint16_t(command) >> 8), std::uint8_t(command) };
