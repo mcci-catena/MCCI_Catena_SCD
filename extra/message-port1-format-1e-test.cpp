@@ -19,6 +19,11 @@ Author:
 
 */
 
+// To build:
+//  Open a Visual Studio 2019 C++ command line window. Then:
+//
+//  C> cl /EHsc message-port1-format-1e-test.cpp
+
 #include <cmath>
 #include <cstdint>
 #include <iostream>
