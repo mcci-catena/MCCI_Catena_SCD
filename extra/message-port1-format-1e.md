@@ -156,15 +156,15 @@ Floating point mavens will immediately recognize:
 
 The following input data can be used to test decoders.
 
-   `1F 01 18 00`
+   `1e 01 18 00`
 
    ```json
    {
-     "vBat": 1.5
+     "Vbattery": 1.5
    }
    ```
 
-   `1f 02 34 cd`
+   `1e 02 34 cd`
 
    ```json
    {
@@ -172,7 +172,7 @@ The following input data can be used to test decoders.
    }
    ```
 
-   `1f 04 2a`
+   `1e 04 2a`
 
    ```json
    {
@@ -180,31 +180,31 @@ The following input data can be used to test decoders.
    }
    ```
 
-   `1f 08 10 7c`
+   `1e 08 10 7c 7f ff b9 9a`
 
    ```json
    {
-     "TemperatureC": 21.1
-   }```
-
-   `1f 10 6f 53`
-
-   ```json
-   {
-     "DifferentialPressure": 125
+     "co2": 1500.244140625,
+     "dewpoint": 10.272721358752989,
+     "heatindex": null,
+     "humidity": 49.999237048905165,
+     "temperature": 21.1
    }
    ```
 
-   `1f 1f 13 96 34 cd 31 14 8c 6e 07`
+   `1e 0f 13 96 34 cd 31 14 8c 70 a3 9a 3d`
 
    ```json
    {
-     "Boot": 49,
-     "DifferentialPressure": 102.86666666666666,
-     "TemperatureC": 26.3,
-     "Vbattery": 1.22412109375,
-     "Vsystem": 3.300048828125
-   }
+    "Vbattery": 1.22412109375,
+    "Vsystem": 3.300048828125,
+    "boot": 49,
+    "co2": 399.932861328125,
+    "dewpoint": 13.07866207361558,
+    "heatindex": 26.134428507243804,
+    "humidity": 43.99938963912413,
+    "temperature": 26.3
+  }
    ```
 
 ### Test vector generator
@@ -214,45 +214,43 @@ This repository contains a simple C++ file for generating test vectors.
 Build it from the command line. Using Visual C++:
 
 ```console
-C> cl /EHsc message-port1-format-1f-test.cpp
+C> cl /EHsc message-port1-format-1e-test.cpp
 Microsoft (R) C/C++ Optimizing Compiler Version 19.26.28806 for x64
 Copyright (C) Microsoft Corporation.  All rights reserved.
 
-message-port1-format-1f-test.cpp
+message-port1-format-1e-test.cpp
 Microsoft (R) Incremental Linker Version 14.26.28806.0
 Copyright (C) Microsoft Corporation.  All rights reserved.
 
-/out:message-port1-format-1f-test.exe
-message-port1-format-1f-test.obj
+/out:message-port1-format-1e-test.exe
+message-port1-format-1e-test.obj
 ```
 
 Using GCC or Clang on Linux:
 
 ```bash
-make message-port1-format-20-test
+make message-port1-format-1e-test
 ```
 
 (The default make rules should work.)
 
-For usage, read the source or the check the input vector generation file `message-port1-format-1f.vec`.
+For usage, read the source or the check the input vector generation file `message-port1-format-1e.vec`.
 
 To run it against the test vectors, try:
 
 ```console
-$ message-port1-format-1f-test < message-port1-format-1f.vec
+$ message-port1-format-1e-test < message-port1-format-1e.vec
 Input a line with name/values pairs
 Vbat 1.5 .
-1f 01 18 00
+1e 01 18 00
 Vsys 3.3 .
-1f 02 34 cd
+1e 02 34 cd
 Boot 42 .
-1f 04 2a
-T 21.1 .
-1f 08 10 7c
-deltaP 125 .
-1f 10 6f 53
-Vbat 1.2241 Vsys 3.3 Boot 49 T 26.3 deltaP 102.866 .
-1f 1f 13 96 34 cd 31 14 8c 6e 07
+1e 04 2a
+T 21.1 RH 50 CO2ppm 1500 .
+1e 08 10 7c 7f ff b9 9a
+Vbat 1.2241 Vsys 3.3 Boot 49 T 26.3 RH 44 CO2ppm 400 .
+1e 0f 13 96 34 cd 31 14 8c 70 a3 9a 3d
 ```
 
 ## The Things Network Console decoding script
@@ -261,15 +259,15 @@ The repository contains a generic script that decodes messages in this format, f
 
 You can get the latest version on GitHub:
 
-- in [raw form](https://raw.githubusercontent.com/mcci-catena/MCCI_Catena_SCD30/master/extra/message-port1-format-1f-decoder-ttn.js)
-- or [view it](https://github.com/mcci-catena/MCCI_Catena_SCD30/blob/master/extra/message-port1-format-1f-decoder-ttn.js)
+- in [raw form](https://raw.githubusercontent.com/mcci-catena/MCCI_Catena_SCD30/master/extra/message-port1-format-1e-decoder-ttn.js)
+- or [view it](https://github.com/mcci-catena/MCCI_Catena_SCD30/blob/master/extra/message-port1-format-1e-decoder-ttn.js)
 
 ## Node-RED Decoding Script
 
 A Node-RED script to decode this data is part of this repository. You can download the latest version from GitHub:
 
-- in [raw form](https://raw.githubusercontent.com/mcci-catena/MCCI-Catena-PMS7003/master/extra/catena-message-port1-20-decoder-node-red.js)
-- or [view it](https://raw.githubusercontent.com/mcci-catena/MCCI-Catena-PMS7003/blob/master/extra/catena-message-port1-20-decoder-node-red.js)
+- in [raw form](https://raw.githubusercontent.com/mcci-catena/MCCI-Catena-PMS7003/master/extra/catena-message-port1-1e-decoder-node-red.js)
+- or [view it](https://raw.githubusercontent.com/mcci-catena/MCCI-Catena-PMS7003/blob/master/extra/catena-message-port1-1e-decoder-node-red.js)
 
 ## Meta
 

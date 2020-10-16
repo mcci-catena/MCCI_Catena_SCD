@@ -295,8 +295,8 @@ void logMeasurement(Measurements &m)
     if (m.SCD.fValid)
         {
         std::cout << pad.get() << "T " << m.SCD.v.Temperature
-                  << pad.get() << "RH " << m.SCD.v.RelativeHumidity
-                  << pad.get() << "CO2ppm " << m.SCD.v.CO2ppm;
+                               << " RH " << m.SCD.v.RelativeHumidity
+                               << " CO2ppm " << m.SCD.v.CO2ppm;
         }
 
     // make the syntax cut/pastable.
