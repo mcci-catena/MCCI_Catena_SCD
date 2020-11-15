@@ -144,6 +144,7 @@ public:
         Uninitialized,
         InvalidParameter,
         InternalInvalidState,
+        SensorUpdateFailed,
         };
 
     static constexpr std::uint32_t kCommandRecoveryMs = 20; // from Sensirion sample code.

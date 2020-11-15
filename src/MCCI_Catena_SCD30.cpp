@@ -240,7 +240,14 @@ bool cSCD30::setMeasurementInterval(std::uint16_t interval)
         std::uint16_t nonce;
         result = this->readMeasurementInterval(nonce);
         if (result)
+            {
+            // always update the idea of the measurement interval, no matter what.
             this->m_ProductInfo.MeasurementInterval = nonce;
+
+            // but if it doesn't match, report an error.
+            if (nonce != interval)
+                result = this->setLastError(Error::SensorUpdateFailed);
+            }
         }
 
     return result;
@@ -261,6 +268,8 @@ bool cSCD30::activateAutomaticSelfCalbration(bool fEnableIfTrue)
         result = this->readAutoSelfCalibration(nonce);
         if (result)
             this->m_ProductInfo.fASC_status = nonce;
+        if (!fEnableIfTrue != !nonce)
+            result = this->setLastError(Error::SensorUpdateFailed);
         }
     return result;
     }
