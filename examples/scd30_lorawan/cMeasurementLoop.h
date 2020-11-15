@@ -105,7 +105,7 @@ public:
             Vcc = 1 << 1,
             Boot = 1 << 2,
             SCD30 = 1 << 3,     // temperature (int16, 0.005 deg C),
-                                // rh (uint16, 0xFFFF = 100%), 
+                                // rh (uint16, 0xFFFF = 100%),
                                 // CO2 PPM, uflt16
             };
 

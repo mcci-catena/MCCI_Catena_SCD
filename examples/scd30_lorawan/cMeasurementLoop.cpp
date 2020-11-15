@@ -206,7 +206,7 @@ cMeasurementLoop::State cMeasurementLoop::fsmDispatch(
     default:
         break;
         }
-    
+
     return newState;
     }
 
@@ -352,7 +352,7 @@ void cMeasurementLoop::sendBufferDone(bool fSuccess)
 
 /****************************************************************************\
 |
-|   The Polling function -- 
+|   The Polling function --
 |
 \****************************************************************************/
 
@@ -395,7 +395,7 @@ void cMeasurementLoop::poll()
 
 /****************************************************************************\
 |
-|   Update the TxCycle count. 
+|   Update the TxCycle count.
 |
 \****************************************************************************/
 
@@ -424,7 +424,7 @@ void cMeasurementLoop::updateTxCycleTime()
 
 /****************************************************************************\
 |
-|   Handle sleep between measurements 
+|   Handle sleep between measurements
 |
 \****************************************************************************/
 
