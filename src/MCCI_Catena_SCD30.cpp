@@ -225,11 +225,14 @@ bool cSCD30::setMeasurementInterval(std::uint16_t interval)
     if (interval < 2)
         return this->setLastError(Error::InvalidParameter);
 
-    bool result = this->checkRunning();
-    if (result)
-        {
-        result = this->writeCommand(Command::SetMeasurementInterval, interval);
-        }
+    if (! this->checkRunning())
+        return false;
+
+    bool result;
+
+    // issue the command
+    result = this->writeCommand(Command::SetMeasurementInterval, interval);
+
     if (result)
         {
         std::uint16_t nonce;
