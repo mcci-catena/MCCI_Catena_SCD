@@ -146,6 +146,7 @@ public:
         InternalInvalidState,
         };
 
+    static constexpr std::uint32_t kCommandRecoveryMs = 20; // from Sensirion sample code.
     static constexpr std::uint32_t kReadDelayMs = 3;    // delay after write to read.
 
 private:

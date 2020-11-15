@@ -235,11 +235,14 @@ bool cSCD30::setMeasurementInterval(std::uint16_t interval)
 
     if (result)
         {
+        delay(this->kCommandRecoveryMs);
+
         std::uint16_t nonce;
         result = this->readMeasurementInterval(nonce);
         if (result)
             this->m_ProductInfo.MeasurementInterval = nonce;
         }
+
     return result;
     }
 
@@ -252,6 +255,8 @@ bool cSCD30::activateAutomaticSelfCalbration(bool fEnableIfTrue)
         }
     if (result)
         {
+        delay(this->kCommandRecoveryMs);
+
         std::uint16_t nonce;
         result = this->readAutoSelfCalibration(nonce);
         if (result)
@@ -335,6 +340,8 @@ bool cSCD30::startContinuousMeasurementCommon(std::uint16_t param)
 
     if (result)
         {
+        delay(this->kCommandRecoveryMs);
+
         this->m_state = State::Triggered;
         this->m_tReady = millis() + this->m_ProductInfo.MeasurementInterval * 1000;
         }
