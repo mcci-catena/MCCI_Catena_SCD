@@ -266,12 +266,14 @@ bool cSCD30::writeCommand(cSCD30::Command command)
 
 bool cSCD30::writeCommand(cSCD30::Command command, std::uint16_t param)
     {
-    const std::uint8_t cbuf[4] =
+    std::uint8_t cbuf[5] =
         {
         std::uint8_t(std::uint16_t(command) >> 8), std::uint8_t(command),
         std::uint8_t(std::uint16_t(param) >> 8), std::uint8_t(param),
+        /* crc */ 0
         };
 
+    cbuf[4] = this->crc(&cbuf[2], 2);
     return this->writeCommandBuffer(cbuf, sizeof(cbuf));
     }
 
