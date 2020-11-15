@@ -203,7 +203,7 @@ cSCD30::readUint16(
 
     if (result)
         {
-        delay(3);
+        delay(this->kReadDelayMs);
 
         result = this->readResponse(buf, sizeof(buf));
         }

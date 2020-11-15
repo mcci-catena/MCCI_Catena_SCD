@@ -146,6 +146,8 @@ public:
         InternalInvalidState,
         };
 
+    static constexpr std::uint32_t kReadDelayMs = 3;    // delay after write to read.
+
 private:
     // this is internal -- centralize it but require that clients call the
     // public method (which centralizes the strings and the search)
