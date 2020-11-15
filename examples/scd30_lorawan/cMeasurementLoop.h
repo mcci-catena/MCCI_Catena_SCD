@@ -162,6 +162,7 @@ private:
 
     // sleep handling
     void sleep();
+    // can we enter deep sleep?
     bool checkDeepSleep();
     void doSleepAlert(bool fDeepSleep);
     void doDeepSleep();

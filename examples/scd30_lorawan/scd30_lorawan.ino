@@ -270,7 +270,7 @@ void loop()
 |
 \****************************************************************************/
 
-/* process "debugmask" -- args are ignored */
+/* process "debugmask"  */
 // argv[0] is the matched command name.
 // argv[1] if present is the new mask
 cCommandStream::CommandStatus cmdDebugFlags(
