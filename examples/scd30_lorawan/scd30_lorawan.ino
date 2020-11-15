@@ -295,7 +295,7 @@ cCommandStream::CommandStatus cmdDebugFlags(
             {
             std::uint32_t newMask;
             bool fOverflow;
-            size_t const nArg = std::strlen(argv[1]);
+            size_t const nArg = strlen(argv[1]);
 
             if (nArg != McciAdkLib_BufferToUint32(
                                 argv[1], nArg,
