@@ -34,7 +34,7 @@ using namespace McciCatenaScd30;
 void cMeasurementLoop::begin()
     {
     // turn on flags for debugging.
-    // gLog.setFlags(cLog::DebugFlags(gLog.getFlags() | gLog.kTrace | gLog.kInfo));
+    gLog.setFlags(cLog::DebugFlags(gLog.getFlags() | gLog.kTrace | gLog.kInfo));
 
     // assume we have a pressure sensor
     this->m_fSCD = true;
