@@ -197,7 +197,10 @@ public:
     float getCO2ppm() const { return this->m_Measurement.CO2ppm; }
     float getRelativeHumidity() const { return this->m_Measurement.CO2ppm; }
     Measurement getMeasurement() const { return this->m_Measurement; }
+    // return cached copy of product information structure.
     ProductInfo getInfo() const { return this->m_ProductInfo; }
+    // return cached copy of measurement interval, in ms.
+    std::uint16_t getMeasurementInterval() const { return this->m_ProductInfo.MeasurementInterval; }
     Error getLastError() const
         {
         return this->m_lastError;
