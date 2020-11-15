@@ -21,6 +21,9 @@ Author:
 #include "scd30_lorawan.h"
 #include "cMeasurementLoop.h"
 #include <arduino_lmic.h>
+#include <climits>
+#include <cstdint>
+#include <cstring>
 
 using namespace McciCatena;
 using namespace McciCatenaScd30;
@@ -73,12 +76,16 @@ cMeasurementLoop gMeasurementLoop { gSCD };
 
 // forward reference to the command functions
 cCommandStream::CommandFn cmdDebugFlags;
+cCommandStream::CommandFn cmdInfo;
+cCommandStream::CommandFn cmdInterval;
 cCommandStream::CommandFn cmdRunStop;
 
 // the individual commmands are put in this table
 static const cCommandStream::cEntry sMyExtraCommmands[] =
         {
         { "debugflags", cmdDebugFlags },
+        { "info", cmdInfo },
+        { "interval", cmdInterval },
         { "run", cmdRunStop },
         { "stop", cmdRunStop },
         // other commands go here....
@@ -222,7 +229,11 @@ void setup_sensors()
                         unsigned(gSCD.getLastError())
                         );
         }
-    
+    else
+        {
+        printSCDinfo();
+        }
+
     gMeasurementLoop.begin();
     }
 
@@ -261,6 +272,27 @@ void setup_measurement()
 void loop()
     {
     gCatena.poll();
+    }
+
+/****************************************************************************\
+|
+|   Utilities
+|
+\****************************************************************************/
+
+void printSCDinfo()
+    {
+    auto const info = gSCD.getInfo();
+    gCatena.SafePrintf(
+        "Found sensor: firmware version %u.%u\n",
+        info.FirmwareVersion / 256u,
+        info.FirmwareVersion & 0xFFu
+        );
+    gCatena.SafePrintf("  Automatic Sensor Calibration: %u\n", info.fASC_status);
+    gCatena.SafePrintf("  Sample interval:      %6u secs\n", info.MeasurementInterval);
+    gCatena.SafePrintf("  Forced Recalibration: %6u ppm\n", info.ForcedRecalibrationValue);
+    gCatena.SafePrintf("  Temperature Offset:   %6d centi-C\n", info.TemperatureOffset);
+    gCatena.SafePrintf("  Altitude:             %6d meters\n", info.AltitudeCompensation);
     }
 
 /****************************************************************************\
@@ -333,6 +365,75 @@ cCommandStream::CommandStatus cmdRunStop(
 
         fEnable = argv[0][0] == 'r';
         gMeasurementLoop.requestActive(fEnable);
- 
+
         return cCommandStream::CommandStatus::kSuccess;
         }
+
+/* process "info" -- args are ignored */
+// argv[0] is the matched command name.
+cCommandStream::CommandStatus cmdInfo(
+        cCommandStream *pThis,
+        void *pContext,
+        int argc,
+        char **argv
+        )
+        {
+        bool fResult;
+
+        fResult = false;
+        if (argc == 1)
+            {
+            printSCDinfo();
+            fResult = true;
+            }
+
+        return fResult ? cCommandStream::CommandStatus::kSuccess
+                       : cCommandStream::CommandStatus::kInvalidParameter
+                       ;
+        }
+
+/* process "interval" */
+// argv[0] is the matched command name
+// argv[1] is the value
+cCommandStream::CommandStatus cmdInterval(
+    cCommandStream *pThis,
+    void *pContext,
+    int argc,
+    char **argv
+    )
+    {
+    cCommandStream::CommandStatus result;
+
+    result = cCommandStream::CommandStatus::kInvalidParameter;
+    if (argc == 1)
+        {
+        auto const info = gSCD.getInfo();
+        gCatena.SafePrintf("%u secs\n", info.MeasurementInterval);
+        result = cCommandStream::CommandStatus::kSuccess;
+        }
+    else if (argc != 2)
+        {
+        // do nothing
+        }
+    else
+        {
+        std::uint32_t interval;
+
+        // set interval.
+        result = cCommandStream::getuint32(argc, argv, 1, 10, interval, 0);
+        if (result == cCommandStream::CommandStatus::kSuccess && interval <= UINT16_MAX)
+            {
+            if (! gSCD.setMeasurementInterval(std::uint16_t(interval)))
+                {
+                gCatena.SafePrintf("setMeasurementInterval failed: %s\n", gSCD.getLastErrorName());
+                result = cCommandStream::CommandStatus::kError;
+                }
+            else
+                {
+                result = cCommandStream::CommandStatus::kSuccess;
+                }
+            }
+        }
+
+    return result;
+    }
