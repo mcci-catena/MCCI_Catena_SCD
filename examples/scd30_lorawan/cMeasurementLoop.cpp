@@ -133,6 +133,7 @@ cMeasurementLoop::State cMeasurementLoop::fsmDispatch(
     case State::stWake:
         if (fEntry)
             {
+            gLed.Set(McciCatena::LedPattern::WarmingUp);
             this->setTimer(20);
             }
         if (this->timedOut())
@@ -147,6 +148,7 @@ cMeasurementLoop::State cMeasurementLoop::fsmDispatch(
         if (fEntry)
             {
             this->m_measurement_valid = false;
+            gLed.Set(McciCatena::LedPattern::Measuring);
             }
         if (this->m_Scd.queryReady(fError))
             {
@@ -179,6 +181,7 @@ cMeasurementLoop::State cMeasurementLoop::fsmDispatch(
         if (fEntry)
             {
             // nothing to do for sleeping the sensor.
+            gLed.Set(McciCatena::LedPattern::Settling);
             }
 
         newState = State::stTransmit;
@@ -187,6 +190,8 @@ cMeasurementLoop::State cMeasurementLoop::fsmDispatch(
     case State::stTransmit:
         if (fEntry)
             {
+            gLed.Set(McciCatena::LedPattern::Sending);
+
             TxBuffer_t b;
             this->fillTxBuffer(b);
             this->startTransmission(b);
@@ -218,8 +223,6 @@ cMeasurementLoop::State cMeasurementLoop::fsmDispatch(
 
 void cMeasurementLoop::fillTxBuffer(cMeasurementLoop::TxBuffer_t& b)
     {
-    auto const savedLed = gLed.Set(McciCatena::LedPattern::Measuring);
-
     b.begin();
     Flags flag;
 
@@ -295,8 +298,6 @@ void cMeasurementLoop::fillTxBuffer(cMeasurementLoop::TxBuffer_t& b)
         }
 
     *pFlag = std::uint8_t(flag);
-
-    gLed.Set(savedLed);
     }
 
 /****************************************************************************\
