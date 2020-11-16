@@ -45,8 +45,6 @@ void cMeasurementLoop::begin()
         this->m_registered = true;
 
         gCatena.registerObject(this);
-
-        this->m_UplinkTimer.begin(this->m_txCycleSec * 1000);
         }
 
     if (! this->m_running)
@@ -106,12 +104,14 @@ cMeasurementLoop::State cMeasurementLoop::fsmDispatch(
             {
             this->m_rqActive = this->m_rqInactive = false;
             this->m_active = true;
-            this->m_UplinkTimer.retrigger();
             newState = State::stWake;
             }
         break;
 
     case State::stSleeping:
+        {
+        bool fError;
+
         if (fEntry)
             {
             gLed.Set(McciCatena::LedPattern::Sleeping);
@@ -123,10 +123,32 @@ cMeasurementLoop::State cMeasurementLoop::fsmDispatch(
             this->m_active = false;
             newState = State::stInactive;
             }
-        else if (this->m_UplinkTimer.isready())
-            newState = State::stWake;
-        else if (this->m_UplinkTimer.getRemaining() > 1500)
-            this->sleep();
+        else if (this->m_Scd.queryReady(fError))
+            newState = State::stMeasure;
+        else if (fError)
+            {
+            newState = State::stInactive;
+            if (gLog.isEnabled(gLog.kError))
+                {
+                gLog.printf(
+                    gLog.kAlways,
+                    "Error: %s, stop loop\n",
+                    this->m_Scd.getLastErrorName()
+                    );
+                }
+            }
+        else
+            {
+            auto const msToNext = this->m_Scd.getMsToNextMeasurement();
+            if (msToNext < 20)
+                newState = State::stWake;
+            else if (msToNext > 500)
+                // sleep and stay in state.
+                this->sleep();
+            else
+                /* stay in this state */;
+            }
+        }
         break;
 
     // in this state, do anything needed after sleep.
@@ -199,9 +221,6 @@ cMeasurementLoop::State cMeasurementLoop::fsmDispatch(
         if (this->txComplete())
             {
             newState = State::stSleeping;
-
-            // calculate the new sleep interval.
-            this->updateTxCycleTime();
             }
         break;
 
@@ -389,44 +408,13 @@ void cMeasurementLoop::poll()
             fEvent = true;
             }
         }
-
-    // check the transmit time.
-    if (this->m_UplinkTimer.peekTicks() != 0)
+    else
         {
         fEvent = true;
         }
 
     if (fEvent)
         this->m_fsm.eval();
-    }
-
-/****************************************************************************\
-|
-|   Update the TxCycle count.
-|
-\****************************************************************************/
-
-void cMeasurementLoop::updateTxCycleTime()
-    {
-    auto txCycleCount = this->m_txCycleCount;
-
-    // update the sleep parameters
-    if (txCycleCount > 1)
-            {
-            // values greater than one are decremented and ultimately reset to default.
-            this->m_txCycleCount = txCycleCount - 1;
-            }
-    else if (txCycleCount == 1)
-            {
-            // it's now one (otherwise we couldn't be here.)
-            gCatena.SafePrintf("resetting tx cycle to default: %u\n", this->m_txCycleSec_Permanent);
-
-            this->setTxCycleTime(this->m_txCycleSec_Permanent, 0);
-            }
-    else
-            {
-            // it's zero. Leave it alone.
-            }
     }
 
 /****************************************************************************\
@@ -451,7 +439,7 @@ bool cMeasurementLoop::checkDeepSleep()
     bool const fDeepSleepTest = gCatena.GetOperatingFlags() &
                     static_cast<uint32_t>(gCatena.OPERATING_FLAGS::fDeepSleepTest);
     bool fDeepSleep;
-    std::uint32_t const sleepInterval = this->m_UplinkTimer.getRemaining() / 1000;
+    std::uint32_t const sleepInterval = this->m_Scd.getMsToNextMeasurement() / 1000;
 
     if (sleepInterval < 2)
             fDeepSleep = false;
@@ -524,17 +512,29 @@ void cMeasurementLoop::doSleepAlert(bool fDeepSleep)
             }
         }
     else
-        gCatena.SafePrintf("using light sleep\n");
+        gCatena.SafePrintf("using light sleep; next measurement in %u ms\n", this->m_Scd.getMsToNextMeasurement());
     }
 
 void cMeasurementLoop::doDeepSleep()
     {
     // bool const fDeepSleepTest = gCatena.GetOperatingFlags() &
     //                         static_cast<uint32_t>(gCatena.OPERATING_FLAGS::fDeepSleepTest);
-    std::uint32_t const sleepInterval = this->m_UplinkTimer.getRemaining() / 1000;
+    std::uint32_t const sleepInterval = this->m_Scd.getMsToNextMeasurement() / 1000;
 
     if (sleepInterval == 0)
         return;
+
+    /* how long are we planning to sleep for? */
+    if (gLog.isEnabled(gLog.kTrace))
+        {
+        gLog.printf(
+            gLog.kAlways,
+            "sleep for %u sec, state %s\n",
+            sleepInterval,
+            this->m_Scd.getCurrentStateName()
+            );
+        delay(10);
+        }
 
     /* ok... now it's time for a deep sleep */
     gLed.Set(McciCatena::LedPattern::Off);

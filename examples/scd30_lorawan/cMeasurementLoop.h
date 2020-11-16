@@ -54,9 +54,6 @@ public:
             McciCatenaScd30::cSCD30& scd30
             )
         : m_Scd(scd30)
-        , m_txCycleSec_Permanent(6 * 60)    // default uplink interval
-        , m_txCycleSec(30)                  // initial uplink interval
-        , m_txCycleCount(10)                // initial count of fast uplinks
         {};
 
     // neither copyable nor movable
@@ -115,22 +112,6 @@ public:
     // initialize measurement FSM.
     void begin();
     void end();
-    void setTxCycleTime(
-        std::uint32_t txCycleSec,
-        std::uint32_t txCycleCount
-        )
-        {
-        this->m_txCycleSec = txCycleSec;
-        this->m_txCycleCount = txCycleCount;
-
-        this->m_UplinkTimer.setInterval(txCycleSec * 1000);
-        if (this->m_UplinkTimer.peekTicks() != 0)
-            this->m_fsm.eval();
-        }
-    std::uint32_t getTxCycleTime()
-        {
-        return this->m_txCycleSec;
-        }
     virtual void poll() override;
 
     // request that the measurement loop be active/inactive
@@ -214,12 +195,6 @@ private:
     bool                m_txerr : 1;
     // set true when we've printed how we plan to sleep
     bool                m_fPrintedSleeping : 1;
-
-    // uplink time control
-    McciCatena::cTimer  m_UplinkTimer;
-    std::uint32_t       m_txCycleSec;
-    std::uint32_t       m_txCycleCount;
-    std::uint32_t       m_txCycleSec_Permanent;
 
     // for simple internal timer.
     std::uint32_t           m_timer_start;
