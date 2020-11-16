@@ -44,7 +44,6 @@ struct SCDval
     {
     float   Temperature;
     float   RelativeHumidity;
-    float   CO2ppm;
     };
 
 struct Measurements
@@ -54,6 +53,7 @@ struct Measurements
     val<float> Vbus;
     val<std::uint8_t> Boot;
     val<SCDval> SCD;
+    val<float> CO2;
     };
 
 uint16_t
@@ -246,7 +246,13 @@ void encodeMeasurement(Buffer &buf, Measurements &m)
 
         buf.push_back_be(encodeT(m.SCD.v.Temperature));
         buf.push_back_be(encodeRH(m.SCD.v.RelativeHumidity));
-        buf.push_back_be(encodeCO2(m.SCD.v.CO2ppm));
+        }
+
+    if (m.CO2.fValid)
+        {
+        flags |= 1 << 4;
+
+        buf.push_back_be(encodeCO2(m.CO2.v));
         }
 
     // update the flags
@@ -296,7 +302,13 @@ void logMeasurement(Measurements &m)
         {
         std::cout << pad.get() << "T " << m.SCD.v.Temperature
                                << " RH " << m.SCD.v.RelativeHumidity
-                               << " CO2ppm " << m.SCD.v.CO2ppm;
+                              ;
+        }
+    if (m.CO2.fValid)
+        {
+        std::cout << pad.get()
+                  << "CO2ppm " << m.CO2.v
+                  ;
         }
 
     // make the syntax cut/pastable.
@@ -359,14 +371,13 @@ int main(int argc, char **argv)
         else if (key == "T")
             {
             SCDval v;
-            std::string rhkey, co2key;
+            std::string rhkey;
             std::cin >> v.Temperature
                     >> rhkey
                     >> v.RelativeHumidity
-                    >> co2key
-                    >> v.CO2ppm;
+                    ;
 
-            if (rhkey == "RH" && co2key == "CO2ppm")
+            if (rhkey == "RH")
                 {
                 m.SCD.v = v;
                 m.SCD.fValid = true;
@@ -375,11 +386,14 @@ int main(int argc, char **argv)
                 {
                 if (rhkey != "RH")
                     std::cerr << "unknown key: " << rhkey << "\n";
-                if (co2key != "CO2ppm")
-                    std::cerr << "unknown key: " << co2key << "\n";
 
                 fUpdate = false;
                 }
+            }
+        else if (key == "CO2ppm")
+            {
+            std::cin >> m.CO2.v;
+            m.CO2.fValid = true;
             }
         else if (key == ".")
             {

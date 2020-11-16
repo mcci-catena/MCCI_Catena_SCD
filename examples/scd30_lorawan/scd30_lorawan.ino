@@ -21,6 +21,9 @@ Author:
 #include "scd30_lorawan.h"
 #include "cMeasurementLoop.h"
 #include <arduino_lmic.h>
+#include <climits>
+#include <cstdint>
+#include <cstring>
 
 using namespace McciCatena;
 using namespace McciCatenaScd30;
@@ -32,7 +35,7 @@ using namespace McciCatenaScd30;
 |
 \****************************************************************************/
 
-constexpr std::uint32_t kAppVersion = makeVersion(1,0,0,0);
+constexpr std::uint32_t kAppVersion = makeVersion(1,1,0,0);
 
 #if defined(ARDUINO_MCCI_CATENA_4801)
 static constexpr bool k4801 = true;
@@ -73,12 +76,16 @@ cMeasurementLoop gMeasurementLoop { gSCD };
 
 // forward reference to the command functions
 cCommandStream::CommandFn cmdDebugFlags;
+cCommandStream::CommandFn cmdInfo;
+cCommandStream::CommandFn cmdInterval;
 cCommandStream::CommandFn cmdRunStop;
 
 // the individual commmands are put in this table
 static const cCommandStream::cEntry sMyExtraCommmands[] =
         {
         { "debugflags", cmdDebugFlags },
+        { "info", cmdInfo },
+        { "interval", cmdInterval },
         { "run", cmdRunStop },
         { "stop", cmdRunStop },
         // other commands go here....
@@ -113,6 +120,11 @@ void setup()
 
 void setup_platform()
     {
+    /* enable the 3.3V regulator and let it come up */
+    pinMode(D5, OUTPUT);
+    digitalWrite(D5, 1);
+    delay(50);
+
     /* power up sensor */
     pinMode(D11, OUTPUT);
     digitalWrite(D11, 1);
@@ -120,10 +132,6 @@ void setup_platform()
     /* power up other i2c sensors */
     pinMode(D10, OUTPUT);
     digitalWrite(D10, 1);
-
-    /* enable the 3.3V regulator */
-    pinMode(D5, OUTPUT);
-    digitalWrite(D5, 1);
 
     /* set up the Modbus driver */
     pinMode(D12, OUTPUT);
@@ -182,6 +190,10 @@ void setup_printSignOn()
         ((unsigned)gCatena.GetSystemClockRate() / (1000*1000)),
         ((unsigned)gCatena.GetSystemClockRate() / 1000 % 1000)
         );
+
+    gCatena.SafePrintf("Reset reason (RCC CSR): 0x%x\n", RCC->CSR >> 24);
+    RCC->CSR |= RCC_CSR_RMVF;
+
     gCatena.SafePrintf("Enter 'help' for a list of commands.\n");
     gCatena.SafePrintf("(remember to select 'Line Ending: Newline' at the bottom of the monitor window.)\n");
 
@@ -222,7 +234,11 @@ void setup_sensors()
                         unsigned(gSCD.getLastError())
                         );
         }
-    
+    else
+        {
+        printSCDinfo();
+        }
+
     gMeasurementLoop.begin();
     }
 
@@ -265,12 +281,33 @@ void loop()
 
 /****************************************************************************\
 |
+|   Utilities
+|
+\****************************************************************************/
+
+void printSCDinfo()
+    {
+    auto const info = gSCD.getInfo();
+    gCatena.SafePrintf(
+        "Found sensor: firmware version %u.%u\n",
+        info.FirmwareVersion / 256u,
+        info.FirmwareVersion & 0xFFu
+        );
+    gCatena.SafePrintf("  Automatic Sensor Calibration: %u\n", info.fASC_status);
+    gCatena.SafePrintf("  Sample interval:      %6u secs\n", info.MeasurementInterval);
+    gCatena.SafePrintf("  Forced Recalibration: %6u ppm\n", info.ForcedRecalibrationValue);
+    gCatena.SafePrintf("  Temperature Offset:   %6d centi-C\n", info.TemperatureOffset);
+    gCatena.SafePrintf("  Altitude:             %6d meters\n", info.AltitudeCompensation);
+    }
+
+/****************************************************************************\
+|
 |   The commands -- called automatically from the framework after receiving
 |   and parsing a command from the Serial console.
 |
 \****************************************************************************/
 
-/* process "debugmask" -- args are ignored */
+/* process "debugmask"  */
 // argv[0] is the matched command name.
 // argv[1] if present is the new mask
 cCommandStream::CommandStatus cmdDebugFlags(
@@ -295,7 +332,7 @@ cCommandStream::CommandStatus cmdDebugFlags(
             {
             std::uint32_t newMask;
             bool fOverflow;
-            size_t const nArg = std::strlen(argv[1]);
+            size_t const nArg = strlen(argv[1]);
 
             if (nArg != McciAdkLib_BufferToUint32(
                                 argv[1], nArg,
@@ -333,6 +370,75 @@ cCommandStream::CommandStatus cmdRunStop(
 
         fEnable = argv[0][0] == 'r';
         gMeasurementLoop.requestActive(fEnable);
- 
+
         return cCommandStream::CommandStatus::kSuccess;
         }
+
+/* process "info" -- args are ignored */
+// argv[0] is the matched command name.
+cCommandStream::CommandStatus cmdInfo(
+        cCommandStream *pThis,
+        void *pContext,
+        int argc,
+        char **argv
+        )
+        {
+        bool fResult;
+
+        fResult = false;
+        if (argc == 1)
+            {
+            printSCDinfo();
+            fResult = true;
+            }
+
+        return fResult ? cCommandStream::CommandStatus::kSuccess
+                       : cCommandStream::CommandStatus::kInvalidParameter
+                       ;
+        }
+
+/* process "interval" */
+// argv[0] is the matched command name
+// argv[1] is the value
+cCommandStream::CommandStatus cmdInterval(
+    cCommandStream *pThis,
+    void *pContext,
+    int argc,
+    char **argv
+    )
+    {
+    cCommandStream::CommandStatus result;
+
+    result = cCommandStream::CommandStatus::kInvalidParameter;
+    if (argc == 1)
+        {
+        auto const info = gSCD.getInfo();
+        gCatena.SafePrintf("%u secs\n", info.MeasurementInterval);
+        result = cCommandStream::CommandStatus::kSuccess;
+        }
+    else if (argc != 2)
+        {
+        // do nothing
+        }
+    else
+        {
+        std::uint32_t interval;
+
+        // set interval.
+        result = cCommandStream::getuint32(argc, argv, 1, 10, interval, 0);
+        if (result == cCommandStream::CommandStatus::kSuccess && interval <= UINT16_MAX)
+            {
+            if (! gSCD.setMeasurementInterval(std::uint16_t(interval)))
+                {
+                gCatena.SafePrintf("setMeasurementInterval failed: %s\n", gSCD.getLastErrorName());
+                result = cCommandStream::CommandStatus::kError;
+                }
+            else
+                {
+                result = cCommandStream::CommandStatus::kSuccess;
+                }
+            }
+        }
+
+    return result;
+    }

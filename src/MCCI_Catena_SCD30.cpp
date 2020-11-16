@@ -203,7 +203,7 @@ cSCD30::readUint16(
 
     if (result)
         {
-        delay(3);
+        delay(this->kReadDelayMs);
 
         result = this->readResponse(buf, sizeof(buf));
         }
@@ -225,18 +225,31 @@ bool cSCD30::setMeasurementInterval(std::uint16_t interval)
     if (interval < 2)
         return this->setLastError(Error::InvalidParameter);
 
-    bool result = this->checkRunning();
+    if (! this->checkRunning())
+        return false;
+
+    bool result;
+
+    // issue the command
+    result = this->writeCommand(Command::SetMeasurementInterval, interval);
+
     if (result)
         {
-        result = this->writeCommand(Command::SetMeasurementInterval, interval);
-        }
-    if (result)
-        {
+        delay(this->kCommandRecoveryMs);
+
         std::uint16_t nonce;
         result = this->readMeasurementInterval(nonce);
         if (result)
+            {
+            // always update the idea of the measurement interval, no matter what.
             this->m_ProductInfo.MeasurementInterval = nonce;
+
+            // but if it doesn't match, report an error.
+            if (nonce != interval)
+                result = this->setLastError(Error::SensorUpdateFailed);
+            }
         }
+
     return result;
     }
 
@@ -249,10 +262,14 @@ bool cSCD30::activateAutomaticSelfCalbration(bool fEnableIfTrue)
         }
     if (result)
         {
+        delay(this->kCommandRecoveryMs);
+
         std::uint16_t nonce;
         result = this->readAutoSelfCalibration(nonce);
         if (result)
             this->m_ProductInfo.fASC_status = nonce;
+        if (!fEnableIfTrue != !nonce)
+            result = this->setLastError(Error::SensorUpdateFailed);
         }
     return result;
     }
@@ -266,12 +283,14 @@ bool cSCD30::writeCommand(cSCD30::Command command)
 
 bool cSCD30::writeCommand(cSCD30::Command command, std::uint16_t param)
     {
-    const std::uint8_t cbuf[4] =
+    std::uint8_t cbuf[5] =
         {
         std::uint8_t(std::uint16_t(command) >> 8), std::uint8_t(command),
         std::uint8_t(std::uint16_t(param) >> 8), std::uint8_t(param),
+        /* crc */ 0
         };
 
+    cbuf[4] = this->crc(&cbuf[2], 2);
     return this->writeCommandBuffer(cbuf, sizeof(cbuf));
     }
 
@@ -330,6 +349,8 @@ bool cSCD30::startContinuousMeasurementCommon(std::uint16_t param)
 
     if (result)
         {
+        delay(this->kCommandRecoveryMs);
+
         this->m_state = State::Triggered;
         this->m_tReady = millis() + this->m_ProductInfo.MeasurementInterval * 1000;
         }
@@ -494,12 +515,10 @@ bool cSCD30::crc_multi(const std::uint8_t *buf, size_t nbuf)
     return true;
     }
 
-const char * cSCD30::getErrorName(cSCD30::Error e)
+static const char *scanMultiSzString(const char *p, unsigned eIndex)
     {
-    auto p = m_szErrorMessages;
-
     // iterate based on error index.
-    for (unsigned eIndex = unsigned(e); eIndex > 0; --eIndex)
+    for (; eIndex > 0; --eIndex)
         {
         // stop when we get to empty string
         if (*p == '\0')
@@ -514,6 +533,16 @@ const char * cSCD30::getErrorName(cSCD30::Error e)
     // otherwise indicate that the input wasn't valid.
     else
         return "<<unknown>>";
+    }
+
+const char * cSCD30::getErrorName(cSCD30::Error e)
+    {
+    return scanMultiSzString(m_szErrorMessages, unsigned(e));
+    }
+
+const char * cSCD30::getStateName(cSCD30::State s)
+    {
+    return scanMultiSzString(m_szStateNames, unsigned(s));
     }
 
 float cSCD30::getFloat32BE(const std::uint8_t *p)

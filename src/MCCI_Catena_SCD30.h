@@ -60,7 +60,7 @@ getLocal(std::uint32_t v)
     }
 
 /// version of library, for use by clients in static_asserts
-static constexpr std::uint32_t kVersion = makeVersion(0,1,0);
+static constexpr std::uint32_t kVersion = makeVersion(0,2,0);
 
 class cSCD30
     {
@@ -144,12 +144,27 @@ public:
         Uninitialized,
         InvalidParameter,
         InternalInvalidState,
+        SensorUpdateFailed,
+        };
+
+    static constexpr std::uint32_t kCommandRecoveryMs = 20; // from Sensirion sample code.
+    static constexpr std::uint32_t kReadDelayMs = 3;    // delay after write to read.
+
+    // state of the measurement enging
+    enum class State : std::uint8_t
+        {
+        Uninitialized,      /// this->begin() has never succeeded.
+        End,                /// this->begin() succeeded, followed by this->end()
+        Initial,            /// initial after begin [indeterminate]
+        Idle,               /// idle (not measuring)
+        Triggered,          /// continuous measurement running, no data available.
+        Ready,              /// continuous measurement running, data availble.
         };
 
 private:
     // this is internal -- centralize it but require that clients call the
     // public method (which centralizes the strings and the search)
-    static constexpr const char *m_szErrorMessages =
+    static constexpr const char * const m_szErrorMessages =
         "Success\0"
         "NoWire\0"
         "CommandWriteFailed\0"
@@ -164,6 +179,17 @@ private:
         "Uninitialized\0"
         "InvalidParmaeter\0"
         "InternalInvalidState\0"
+        ;
+
+    // this is internal -- centralize it but require that clients call the
+    // public method (which centralizes the strings and the search)
+    static constexpr const char * const m_szStateNames =
+        "Uninitialized" "\0"
+        "End"           "\0"
+        "Initial"       "\0"
+        "Idle"          "\0"
+        "Triggered"     "\0"
+        "Ready"         "\0"
         ;
 
 public:
@@ -193,7 +219,10 @@ public:
     float getCO2ppm() const { return this->m_Measurement.CO2ppm; }
     float getRelativeHumidity() const { return this->m_Measurement.CO2ppm; }
     Measurement getMeasurement() const { return this->m_Measurement; }
+    // return cached copy of product information structure.
     ProductInfo getInfo() const { return this->m_ProductInfo; }
+    // return cached copy of measurement interval, in ms.
+    std::uint16_t getMeasurementInterval() const { return this->m_ProductInfo.MeasurementInterval; }
     Error getLastError() const
         {
         return this->m_lastError;
@@ -208,21 +237,26 @@ public:
         {
         return getErrorName(this->m_lastError);
         }
+    static const char *getStateName(State s);
+    const char *getCurrentStateName() const
+        {
+        return getStateName(this->getState());
+        }
     bool readProductInfo();
     bool isRunning() const
         {
         return this->m_state > State::End;
         }
-    enum class State : std::uint8_t
-        {
-        Uninitialized,      /// this->begin() has never succeeded.
-        End,                /// this->begin() succeeded, followed by this->end()
-        Initial,            /// initial after begin [indeterminate]
-        Idle,               /// idle (not measuring)
-        Triggered,          /// continuous measurement running, no data available.
-        Ready,              /// continuous measurement running, data availble.
-        };
     State getState() const { return this->m_state; }
+    // return millis to next measurement ready, or 0 if it should be ready now.
+    std::uint32_t getMsToNextMeasurement() const
+        {
+        auto const now = millis();
+        if (std::int32_t(this->m_tReady - now) < 0)
+            return 0;
+        else
+            return this->m_tReady - now;
+        }
 
 protected:
     bool startContinuousMeasurementCommon(std::uint16_t param);

@@ -223,12 +223,16 @@ function Decoder(bytes, port) {
     }
 
     if (flags & 0x8) {
-        // we have temperature, RH, CO2ppm
+        // we have temperature, RH
         decoded.temperature = DecodeI16(Parse) / 200;
         decoded.humidity = DecodeU16(Parse) / 65535 * 100;
-        decoded.co2 = DecodeUflt16(Parse) * 40000;
         decoded.heatindex = CalculateHeatIndexC(decoded.temperature, decoded.humidity);
         decoded.dewpoint = dewpoint(decoded.temperature, decoded.humidity);
+    }
+    
+    if (flags & 0x10) {
+        // we have CO2 ppm.
+        decoded.co2 = DecodeUflt16(Parse) * 40000;
     }
 
     return decoded;
