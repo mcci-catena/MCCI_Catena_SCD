@@ -189,6 +189,10 @@ void setup_printSignOn()
         ((unsigned)gCatena.GetSystemClockRate() / (1000*1000)),
         ((unsigned)gCatena.GetSystemClockRate() / 1000 % 1000)
         );
+
+    gCatena.SafePrintf("Reset reason (RCC CSR): 0x%x\n", RCC->CSR >> 24);
+    RCC->CSR |= RCC_CSR_RMVF;
+
     gCatena.SafePrintf("Enter 'help' for a list of commands.\n");
     gCatena.SafePrintf("(remember to select 'Line Ending: Newline' at the bottom of the monitor window.)\n");
 
