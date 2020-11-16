@@ -515,12 +515,10 @@ bool cSCD30::crc_multi(const std::uint8_t *buf, size_t nbuf)
     return true;
     }
 
-const char * cSCD30::getErrorName(cSCD30::Error e)
+static const char *scanMultiSzString(const char *p, unsigned eIndex)
     {
-    auto p = m_szErrorMessages;
-
     // iterate based on error index.
-    for (unsigned eIndex = unsigned(e); eIndex > 0; --eIndex)
+    for (; eIndex > 0; --eIndex)
         {
         // stop when we get to empty string
         if (*p == '\0')
@@ -535,6 +533,16 @@ const char * cSCD30::getErrorName(cSCD30::Error e)
     // otherwise indicate that the input wasn't valid.
     else
         return "<<unknown>>";
+    }
+
+const char * cSCD30::getErrorName(cSCD30::Error e)
+    {
+    return scanMultiSzString(m_szErrorMessages, unsigned(e));
+    }
+
+const char * cSCD30::getStateName(cSCD30::State s)
+    {
+    return scanMultiSzString(m_szStateNames, unsigned(s));
     }
 
 float cSCD30::getFloat32BE(const std::uint8_t *p)
