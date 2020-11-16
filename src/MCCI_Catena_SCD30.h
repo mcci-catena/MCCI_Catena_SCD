@@ -248,6 +248,15 @@ public:
         return this->m_state > State::End;
         }
     State getState() const { return this->m_state; }
+    // return millis to next measurement ready, or 0 if it should be ready now.
+    std::uint32_t getMsToNextMeasurement() const
+        {
+        auto const now = millis();
+        if (std::int32_t(this->m_tReady - now) < 0)
+            return 0;
+        else
+            return this->m_tReady - now;
+        }
 
 protected:
     bool startContinuousMeasurementCommon(std::uint16_t param);
