@@ -104,9 +104,9 @@ public:
             Vbat = 1 << 0,
             Vcc = 1 << 1,
             Boot = 1 << 2,
-            SCD30 = 1 << 3,     // temperature (int16, 0.005 deg C),
-                                // rh (uint16, 0xFFFF = 100%),
-                                // CO2 PPM, uflt16
+            TH = 1 << 3,        // temperature (int16, 0.005 deg C),
+                                // rh (uint16, 0xFFFF = 100%)
+            CO2ppm = 1 << 4,    // CO2 PPM, uflt16
             };
 
     static constexpr size_t kTxBufferSize = 36;

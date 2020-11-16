@@ -280,12 +280,18 @@ void cMeasurementLoop::fillTxBuffer(cMeasurementLoop::TxBuffer_t& b)
 
         b.put2(std::int32_t(m.Temperature * 200.0f + 0.5f));
         b.put2(std::uint32_t(m.RelativeHumidity * 65535.0f / 100.0f + 0.5f));
-        // put2 takes a uint32_t or int32_t. We want the uint32_t version,
-        // so we cast. f2uflt16() takes [0.0f, +1.0f) and returns a uint16_t
-        // as an encoding.
-        b.put2(std::uint32_t(LMIC_f2uflt16(m.CO2ppm / 40000.0f)));
+        flag |= Flags::TH;
 
-        flag |= Flags::SCD30;
+        // The CO2 sensor returns 0 on the first reading,
+        // and we want to suppress that.
+        if (m.CO2ppm != 0.0f)
+            {
+            // put2 takes a uint32_t or int32_t. We want the uint32_t version,
+            // so we cast. f2uflt16() takes [0.0f, +1.0f) and returns a uint16_t
+            // as an encoding.
+            b.put2(std::uint32_t(LMIC_f2uflt16(m.CO2ppm / 40000.0f)));
+            flag |= Flags::CO2ppm;
+            }
         }
 
     *pFlag = std::uint8_t(flag);

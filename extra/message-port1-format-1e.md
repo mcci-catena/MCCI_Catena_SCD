@@ -11,7 +11,8 @@
 		- [Battery Voltage (field 0)](#battery-voltage-field-0)
 		- [System Voltage (field 1)](#system-voltage-field-1)
 		- [Boot counter (field 2)](#boot-counter-field-2)
-		- [Temperature, Humidity, CO2 Concentration (field 3)](#temperature-humidity-co2-concentration-field-3)
+		- [Temperature, Humidity (field 3)](#temperature-humidity-field-3)
+		- [CO2 Concentration (field 4)](#co2-concentration-field-4)
 	- [Data Formats](#data-formats)
 		- [uint16](#uint16)
 		- [int16](#int16)
@@ -53,8 +54,8 @@ Bitmap bit | Length of corresponding field (bytes) | Data format |Description
 0 | 2 | [int16](#int16) | [Battery voltage](#battery-voltage-field-0)
 1 | 2 | [int16](#int16) | [System voltage](#sys-voltage-field-1)
 2 | 1 | [uint8](#uint8) | [Boot counter](#boot-counter-field-2)
-3 | 6 | [int16](#int16), [uint16](#uint16), [uflt16](#uflt16) | [Temperature, Humidity, CO2 concentration](#temperature-humidity-co2-concentration-field-3)
-4 | n/a | _reserved_ | Reserved for future use.
+3 | 4 | [int16](#int16), [uint16](#uint16) | [Temperature, Humidity](#temperature-humidity-field-3)
+4 | 2 | [uflt16](#uflt16) | [CO2 concentration](#co2-concentration-field-4)
 5 | n/a | _reserved_ | Reserved for future use.
 6 | n/a | _reserved_ | Reserved for future use.
 7 | n/a | _reserved_ | Reserved for future use.
@@ -73,15 +74,17 @@ _Note:_ this field is not transmitted by some versions of the sketches.
 
 Field 2, if present, is a counter of number of recorded system reboots, modulo 256.
 
-### Temperature, Humidity, CO2 Concentration (field 3)
+### Temperature, Humidity (field 3)
 
-Field 3, if present, contains three two-byte measurements read from the SCD30 sensor.
+Field 3, if present, contains two two-byte measurements read from the SCD30 sensor.
 
 The first two bytes are a [`int16`](#int16) representing the temperature (divide by 200 to get degrees Celsius).
 
 The next two bytes are a [`uint16](#uint16) representing the relative humidity (divide by 655.35 to get the humidity as a percentage).
 
-The last two bytes are a [`uflt16`](#uflt16) representing the carbon dioxide concentration in parts per million (ppm). `uflt16` values represent numbers in the range [0.0..1.0). Multiply by 40000.0f to convert to ppm.
+### CO2 Concentration (field 4)
+
+Field 4, if present, is a two-byte [`uflt16`](#uflt16) representing the carbon dioxide concentration in parts per million (ppm). `uflt16` values represent numbers in the range [0.0..1.0). Multiply by 40000.0f to convert to ppm.
 
 ## Data Formats
 
@@ -239,18 +242,19 @@ For usage, read the source or the check the input vector generation file `messag
 To run it against the test vectors, try:
 
 ```console
-$ message-port1-format-1e-test < message-port1-format-1e.vec
-Input a line with name/values pairs
+$ message-port1-format-1e-test.exe < message-port1-format-1e-test.vec
 Vbat 1.5 .
 1e 01 18 00
 Vsys 3.3 .
 1e 02 34 cd
 Boot 42 .
 1e 04 2a
-T 21.1 RH 50 CO2ppm 1500 .
-1e 08 10 7c 7f ff b9 9a
+T 21.1 RH 50 .
+1e 08 10 7c 7f ff
+CO2ppm 1500 .
+1e 10 b9 9a
 Vbat 1.2241 Vsys 3.3 Boot 49 T 26.3 RH 44 CO2ppm 400 .
-1e 0f 13 96 34 cd 31 14 8c 70 a3 9a 3d
+1e 1f 13 96 34 cd 31 14 8c 70 a3 9a 3d
 ```
 
 ## The Things Network Console decoding script
