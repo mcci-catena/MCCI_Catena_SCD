@@ -120,6 +120,11 @@ void setup()
 
 void setup_platform()
     {
+    /* enable the 3.3V regulator and let it come up */
+    pinMode(D5, OUTPUT);
+    digitalWrite(D5, 1);
+    delay(50);
+
     /* power up sensor */
     pinMode(D11, OUTPUT);
     digitalWrite(D11, 1);
@@ -127,10 +132,6 @@ void setup_platform()
     /* power up other i2c sensors */
     pinMode(D10, OUTPUT);
     digitalWrite(D10, 1);
-
-    /* enable the 3.3V regulator */
-    pinMode(D5, OUTPUT);
-    digitalWrite(D5, 1);
 
     /* set up the Modbus driver */
     pinMode(D12, OUTPUT);
