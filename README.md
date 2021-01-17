@@ -4,6 +4,8 @@ This library provides a simple interface to Sensirion SCD30 carbon dioxide (CO2)
 
 See [Meta](#meta) for information on getting sensors from MCCI.
 
+[![GitHub release](https://img.shields.io/github/release/mcci-catena/MCCI_Catena_SCD30.svg)](https://github.com/mcci-catena/MCCI_Catena_SCD30/releases/latest) [![GitHub commits](https://img.shields.io/github/commits-since/mcci-catena/MCCI_Catena_SCD30/latest.svg)](https://github.com/mcci-catena/MCCI_Catena_SCD30/compare/v0.2.0...master)
+
 <!-- TOC depthFrom:2 updateOnSave:true -->
 
 - [Installation](#installation)
