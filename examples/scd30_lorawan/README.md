@@ -2,6 +2,10 @@
 
 The sketch in this directory (found [here](https://github.com/mcci-catena/MCCI_Catena_SCD30/examples/scd30_lorawan) on GitHub) is a fully-worked example of how to capture data from an SCD30 carbon dioxide (CO2) sensor, and transmit it via LoRaWAN. It requires the [MCCI_Catena_Arduino_Platform](https://github.mcci.com/mcci-catena/Catena-Arduino-Platform) library.
 
+Here's a picture of our reference setup, the MCCI [Eval Kit for the SCD30](http://mcci.io/eval-4801m301-scd30).
+
+[![Image of SCD30 with Catena 4801](../../assets/4801-scd30-1.jpg)](http://mcci.io/eval-4801m301-scd30)
+
 <!-- TOC depthFrom:2 updateOnSave:true -->
 
 - [Serial Port Commands](#serial-port-commands)

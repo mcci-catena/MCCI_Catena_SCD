@@ -1,6 +1,6 @@
 # MCCI Catena&reg; Arduino Library for Sensirion Carbon Dioxide Sensors
 
-This library provides a simple interface to Sensirion SCD30 carbon dioxide (CO2) sensors. Although we tested this on the MCCI Catena 4618, there are no dependencies on MCCI hardware; this should work equally well with Adafruit breakout boards, etc.
+This library provides a simple interface to Sensirion SCD30 carbon dioxide (CO2) sensors. Although we tested this using the MCCI Catena 4801, there are no dependencies on MCCI hardware; this should work equally well with Adafruit breakout boards, etc. The LoRaWAN&reg; example uses the MCCI [Catena-Arduino-Platform](https://github.com/mcci-catena/Catena-Arduino-Platform) library, but the library itself does not.
 
 See [Meta](#meta) for information on getting sensors from MCCI.
 
