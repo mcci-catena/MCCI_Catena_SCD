@@ -13,8 +13,8 @@ Author:
 
 */
 
-#ifndef ARDUINO_MCCI_CATENA_4801
-# error "This sketch targets the MCCI Catena 4801"
+#if !(defined(ARDUINO_MCCI_CATENA_4801) || defined(ARDUINO_MCCI_CATENA_4802))
+# error "This sketch targets the MCCI Catena 4801/4802"
 #endif
 
 #include <Arduino.h>
@@ -35,13 +35,20 @@ using namespace McciCatenaScd30;
 |
 \****************************************************************************/
 
-constexpr std::uint32_t kAppVersion = makeVersion(1,1,0,0);
+constexpr std::uint32_t kAppVersion = makeVersion(1,2,0,0);
 
 #if defined(ARDUINO_MCCI_CATENA_4801)
 static constexpr bool k4801 = true;
 #else
 static constexpr bool k4801 = false;
 #endif
+
+#if defined(ARDUINO_MCCI_CATENA_4802)
+static constexpr bool k4802 = true;
+#else
+static constexpr bool k4802 = false;
+#endif
+
 
 /****************************************************************************\
 |
@@ -120,23 +127,49 @@ void setup()
 
 void setup_platform()
     {
-    /* enable the 3.3V regulator and let it come up */
-    pinMode(D5, OUTPUT);
-    digitalWrite(D5, 1);
-    delay(50);
+    if (k4801)
+        {
+        /* enable the 3.3V regulator and let it come up */
+        pinMode(D5, OUTPUT);
+        digitalWrite(D5, 1);
+        delay(50);
 
-    /* power up sensor */
-    pinMode(D11, OUTPUT);
-    digitalWrite(D11, 1);
+        /* power up sensor */
+        pinMode(D11, OUTPUT);
+        digitalWrite(D11, 1);
 
-    /* power up other i2c sensors */
-    pinMode(D10, OUTPUT);
-    digitalWrite(D10, 1);
+        /* power up other i2c sensors */
+        pinMode(D10, OUTPUT);
+        digitalWrite(D10, 1);
 
-    /* set up the Modbus driver */
-    pinMode(D12, OUTPUT);
-    digitalWrite(D12, 0);
+        /* set up the Modbus driver */
+        pinMode(D12, OUTPUT);
+        digitalWrite(D12, 0);
+        }
+    else if (k4802)
+        {
+        /* power up sensor */
+        pinMode(D11, OUTPUT);
+        digitalWrite(D11, 1);
 
+        /* power up internal I2C: FRAM, SHT3x */
+        pinMode(D10, OUTPUT);
+        digitalWrite(D10, 1);
+
+        /* turn off exterinal I2C */
+        pinMode(D34, OUTPUT);
+        digitalWrite(D34, 0);
+    
+        // make the modbus driver idle
+        pinMode(D12, OUTPUT);
+        digitalWrite(D12, 0);
+        pinMode(D5, OUTPUT);
+        digitalWrite(D5, 1);
+        }
+    else
+        {
+        // do nothing
+        }
     gCatena.begin();
 
     gLed.begin();
@@ -227,6 +260,9 @@ void setup_radio()
 void setup_sensors()
     {
     Wire.begin();
+    if (k4802)
+        digitalWrite(D34, 1);
+
     if (! gSCD.begin())
         {
         gCatena.SafePrintf("gSCD.begin() failed %s(%u)\n",

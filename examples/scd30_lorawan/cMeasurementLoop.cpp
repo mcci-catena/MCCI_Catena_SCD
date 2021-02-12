@@ -18,12 +18,20 @@ Author:
 #include "scd30_lorawan.h"
 #include <arduino_lmic.h>
 
-#ifndef ARDUINO_MCCI_CATENA_4801
-# error "This sketch targets the MCCI Catena 4801"
-#endif
-
 using namespace McciCatena;
 using namespace McciCatenaScd30;
+
+#if defined(ARDUINO_MCCI_CATENA_4801)
+static constexpr bool k4801 = true;
+#else
+static constexpr bool k4801 = false;
+#endif
+
+#if defined(ARDUINO_MCCI_CATENA_4802)
+static constexpr bool k4802 = true;
+#else
+static constexpr bool k4802 = false;
+#endif
 
 /****************************************************************************\
 |
@@ -99,6 +107,8 @@ cMeasurementLoop::State cMeasurementLoop::fsmDispatch(
         if (fEntry)
             {
             // nothing
+            if (k4802)
+                digitalWrite(D34, 0);
             }
         if (this->m_rqActive)
             {
@@ -156,6 +166,8 @@ cMeasurementLoop::State cMeasurementLoop::fsmDispatch(
         if (fEntry)
             {
             gLed.Set(McciCatena::LedPattern::WarmingUp);
+            if (k4802)
+                digitalWrite(D34, 1);
             this->setTimer(20);
             }
         if (this->timedOut())
@@ -202,7 +214,10 @@ cMeasurementLoop::State cMeasurementLoop::fsmDispatch(
     case State::stSleepSensor:
         if (fEntry)
             {
-            // nothing to do for sleeping the sensor.
+            // nothing to do for sleeping the sensor, unless it's 4802
+            if (k4802)
+                digitalWrite(D34, 0);
+
             gLed.Set(McciCatena::LedPattern::Settling);
             }
 
