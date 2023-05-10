@@ -274,6 +274,27 @@ bool cSCD30::activateAutomaticSelfCalbration(bool fEnableIfTrue)
     return result;
     }
 
+bool cSCD30::setForcedRecalibrationValue(std::uint16_t CO2ppm)
+    {
+    bool result = this->checkRunning();
+    if (result)
+        {
+        result = this->writeCommand(Command::SetForcedRecalibration, CO2ppm);
+        }
+    if (result)
+        {
+        delay(this->kCommandRecoveryMs);
+
+        std::uint16_t nonce;
+        result = this->readForcedRecalibrationValue(nonce);
+        if (result)
+            this->m_ProductInfo.ForcedRecalibrationValue = nonce;
+        if (CO2ppm != nonce)
+            result = this->setLastError(Error::SensorUpdateFailed);
+        }
+    return result;
+    }
+
 bool cSCD30::writeCommand(cSCD30::Command command)
     {
     const std::uint8_t cbuf[2] = { std::uint8_t(std::uint16_t(command) >> 8), std::uint8_t(command) };
